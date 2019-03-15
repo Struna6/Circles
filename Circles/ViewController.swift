@@ -14,21 +14,21 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(spawnCircle(_:)))
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(moveCircle(_:)))
+        //let longPress = UILongPressGestureRecognizer(target: self, action: #selector(moveCircle(_:)))
         let tripleTap = UITapGestureRecognizer(target: self, action: #selector(removeCircle(_:)))
         
         doubleTap.delegate = self
         tripleTap.delegate = self
-        longPress.delegate = self
+        //longPress.delegate = self
         
         doubleTap.name = "Double"
         tripleTap.name = "Triple"
-        longPress.name = "Long"
+        //longPress.name = "Long"
         
         doubleTap.numberOfTapsRequired = 2
         view.addGestureRecognizer(doubleTap)
         
-        view.addGestureRecognizer(longPress)
+        //view.addGestureRecognizer(longPress)
     
         tripleTap.numberOfTapsRequired = 3
         view.addGestureRecognizer(tripleTap)
@@ -39,6 +39,8 @@ class ViewController: UIViewController {
         circle.layer.cornerRadius = 50.0
         circle.center = tap.location(in: view)
         circle.backgroundColor = UIColor.randomBrightColor()
+        circle.addGestureRecognizer(getGestureLongRecognizer())
+        
         self.view.addSubview(circle)
         circle.alpha = 0.0
         circle.transform = CGAffineTransform(scaleX: 1.6, y: 1.6)
@@ -53,12 +55,10 @@ class ViewController: UIViewController {
     var offsetY : CGFloat = 0.0
     
     @objc func moveCircle(_ pan : UIGestureRecognizer){
-        let point = pan.location(in: self.view)
+        //let point = pan.location(in: self.view)
         
-        if let circle = self.view.hitTest(point, with: nil){
-            if circle == self.view{
-                return
-            }
+        if let circle = pan.view{
+            
             self.view.bringSubviewToFront(circle)
             if pan.state == .began{
                 offsetX = pan.location(in: circle).x - 50
@@ -69,7 +69,7 @@ class ViewController: UIViewController {
                 }
             }
             
-            if pan.state == .ended || pan.state == .cancelled{
+            if pan.state == .ended{
                 UIView.animate(withDuration: 0.2) {
                     circle.transform = CGAffineTransform.identity
                     circle.alpha = 1.0
@@ -97,11 +97,26 @@ class ViewController: UIViewController {
             }
         }
     }
+    
+    func getGestureLongRecognizer() -> UILongPressGestureRecognizer{
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(moveCircle(_:)))
+        longPress.delegate = self
+        longPress.name = "Long"
+        return longPress
+    }
 }
 
 extension ViewController : UIGestureRecognizerDelegate{
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if otherGestureRecognizer.name == "Triple" && gestureRecognizer.name == "Double"{
+            return true
+        }else{
+            return false
+        }
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer.name == "Long" && otherGestureRecognizer.name == "Long"{
             return true
         }else{
             return false
